@@ -9,7 +9,8 @@
 (def tennis-rules
   {:match (comp (build-end-rule 2 1) :match)
    :set (comp (build-end-rule 6 2) last :set)
-   :game (comp (build-end-rule 4 2) :game)})
+   :game (comp (build-end-rule 4 2) :game)
+   :tie-break (comp (build-end-rule 7 2) :game)})
 
 (def blank-score {:match [0 0] :set [[0 0]] :game [0 0]})
 
@@ -34,8 +35,11 @@
     (let [match-end? (tennis-rules :match)
           set-end?   (tennis-rules :set)
           game-end?  (tennis-rules :game)
+          tie-end?  (tennis-rules :tie-break)
+          tie-break? (fn [s] (= [6 6] (-> s :set last)))
           score (update-in score [:game player] inc)]
-      (condf (not (game-end? score)) score
+      (condf (and (tie-break? score) (not (tie-end? score))) score
+             (not (game-end? score)) score
              ;; new game : re-init game's score, inc set score
              :let [last-set-index (dec (count (:set score)))
                    score (assoc score :game [0 0])
